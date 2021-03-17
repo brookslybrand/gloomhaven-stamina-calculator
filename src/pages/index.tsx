@@ -20,6 +20,10 @@ type StaminaEvent =
       cardType: keyof StaminaContext['cards']
       value: number
     }
+  | {
+      type: 'UPDATE_TOTAL_CARDS'
+      value: number
+    }
   | { type: 'CHECK_CARDS' }
   | { type: 'INCOMPLETE' }
   | { type: 'INVALID' }
@@ -40,13 +44,6 @@ interface StaminaContext {
 function getRecordedCards(cards: StaminaContext['cards']) {
   return Object.values(cards).reduce((total, n) => total + n, 0)
 }
-
-// [9,0,0]
-// [7,2,1]
-// [5,4,2]
-// [3,6,3]
-// [1,8,4]
-// [1,8,4]
 
 function getRemainingRounds(
   cards: Pick<StaminaContext['cards'], 'hand' | 'discarded'>
@@ -94,6 +91,9 @@ const staminaMachine = Machine<
       valid: {},
     },
     on: {
+      UPDATE_TOTAL_CARDS: {
+        actions: ['updateTotalCards', send('CHECK_CARDS')],
+      },
       UPDATE_CARDS: {
         actions: ['updateCards', send('CHECK_CARDS')],
       },
@@ -107,6 +107,14 @@ const staminaMachine = Machine<
   },
   {
     actions: {
+      updateTotalCards: assign({
+        totalCards: (context, event) => {
+          if (event.type !== 'UPDATE_TOTAL_CARDS') {
+            throw new Error(`Invalid event type ${event.type}`)
+          }
+          return Math.max(event.value, 0)
+        },
+      }),
       updateCards: assign((context, event) => {
         if (event.type !== 'UPDATE_CARDS') {
           throw new Error(`Invalid event type ${event.type}`)
@@ -156,6 +164,26 @@ export default function Home() {
             ? `You have ${getRemainingRounds(cards)} rounds left`
             : null}
         </h1>
+
+        <div tw="flex w-full space-x-4">
+          <label tw="font-display text-lg font-semibold" htmlFor="totalCards">
+            Total cards:
+          </label>
+          <input
+            id="totalCards"
+            tw="rounded-sm px-2 border-b border-gray-400 text-right w-14"
+            value={totalCards}
+            onChange={(e) =>
+              send({
+                type: 'UPDATE_TOTAL_CARDS',
+                value: Number(e.currentTarget.value),
+              })
+            }
+            type="number"
+            min="0"
+          />
+        </div>
+
         <Slider
           id="hand"
           value={hand}
