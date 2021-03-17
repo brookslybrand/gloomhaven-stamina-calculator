@@ -152,8 +152,8 @@ export default function Home() {
         <title>Gloomhaven Stamina Calculator</title>
       </Head>
 
-      <article tw="w-4/5 mx-auto space-y-4 my-4">
-        <h1 tw="font-display text-xl text-gray-900">
+      <article tw="mx-auto sm:w-4/5 md:w-96">
+        <h1 tw="font-display text-2xl text-gray-900 mt-8">
           {state.matches('incomplete')
             ? `${cardDifference} card${cardDifference > 1 ? 's' : ''} remaining`
             : state.matches('invalid')
@@ -165,61 +165,63 @@ export default function Home() {
             : null}
         </h1>
 
-        <div tw="flex w-full space-x-4">
-          <label tw="font-display text-lg font-semibold" htmlFor="totalCards">
-            Total cards:
-          </label>
-          <input
-            id="totalCards"
-            tw="rounded-sm px-2 border-b border-gray-400 text-right w-14"
-            value={totalCards}
-            onChange={(e) =>
-              send({
-                type: 'UPDATE_TOTAL_CARDS',
-                value: Number(e.currentTarget.value),
-              })
+        <div tw="space-y-4 my-4 mt-8">
+          <div tw="flex w-full space-x-4">
+            <label tw="font-display text-lg font-semibold" htmlFor="totalCards">
+              Total cards:
+            </label>
+            <input
+              id="totalCards"
+              tw="rounded-sm border-b border-gray-400 text-right w-14"
+              value={totalCards}
+              onChange={(e) =>
+                send({
+                  type: 'UPDATE_TOTAL_CARDS',
+                  value: Number(e.currentTarget.value),
+                })
+              }
+              type="number"
+              min="0"
+            />
+          </div>
+
+          <Slider
+            id="hand"
+            value={hand}
+            onChange={(value) =>
+              send({ type: 'UPDATE_CARDS', cardType: 'hand', value })
             }
-            type="number"
-            min="0"
+            label={`Cards in hand: ${hand}`}
+            max={totalCards}
+          />
+          <Slider
+            id="lost"
+            value={lost}
+            onChange={(value) =>
+              send({ type: 'UPDATE_CARDS', cardType: 'lost', value })
+            }
+            label={`Lost cards: ${lost}`}
+            max={totalCards}
+          />
+          <Slider
+            id="discarded"
+            value={discarded}
+            onChange={(value) =>
+              send({ type: 'UPDATE_CARDS', cardType: 'discarded', value })
+            }
+            label={`Discarded cards: ${discarded}`}
+            max={totalCards}
+          />
+          <Slider
+            id="active"
+            value={active}
+            onChange={(value) =>
+              send({ type: 'UPDATE_CARDS', cardType: 'active', value })
+            }
+            label={`Active cards: ${active}`}
+            max={totalCards}
           />
         </div>
-
-        <Slider
-          id="hand"
-          value={hand}
-          onChange={(value) =>
-            send({ type: 'UPDATE_CARDS', cardType: 'hand', value })
-          }
-          label={`Cards in hand: ${hand}`}
-          max={totalCards}
-        />
-        <Slider
-          id="lost"
-          value={lost}
-          onChange={(value) =>
-            send({ type: 'UPDATE_CARDS', cardType: 'lost', value })
-          }
-          label={`Lost cards: ${lost}`}
-          max={totalCards}
-        />
-        <Slider
-          id="discarded"
-          value={discarded}
-          onChange={(value) =>
-            send({ type: 'UPDATE_CARDS', cardType: 'discarded', value })
-          }
-          label={`Discarded cards: ${discarded}`}
-          max={totalCards}
-        />
-        <Slider
-          id="active"
-          value={active}
-          onChange={(value) =>
-            send({ type: 'UPDATE_CARDS', cardType: 'active', value })
-          }
-          label={`Active cards: ${active}`}
-          max={totalCards}
-        />
       </article>
     </>
   )
