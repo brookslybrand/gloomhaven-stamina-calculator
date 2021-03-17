@@ -41,6 +41,36 @@ function getRecordedCards(cards: StaminaContext['cards']) {
   return Object.values(cards).reduce((total, n) => total + n, 0)
 }
 
+// [9,0,0]
+// [7,2,1]
+// [5,4,2]
+// [3,6,3]
+// [1,8,4]
+// [1,8,4]
+
+function getRemainingRounds(
+  cards: Pick<StaminaContext['cards'], 'hand' | 'discarded'>
+) {
+  let remainingRounds = 0
+  let { hand, discarded } = cards
+  // keep iterating while you have at least 2 cards in hand
+  // TODO: account for active cards
+  while (hand >= 2) {
+    hand -= 2
+    discarded += 2
+    remainingRounds++
+    // if you don't have enough to play another round, short rest
+    // which means all but one card goes from your discarded to your
+    // hand and you repeat the process
+    if (hand <= 1 && discarded >= 2) {
+      hand += discarded - 1
+      discarded = 0
+    }
+  }
+
+  return remainingRounds
+}
+
 const staminaMachine = Machine<
   StaminaContext,
   StaminaStateSchema,
@@ -123,7 +153,7 @@ export default function Home() {
                 cardDifference < -1 ? 's' : ''
               }`
             : state.matches('valid')
-            ? `You have ${12} rounds left`
+            ? `You have ${getRemainingRounds(cards)} rounds left`
             : null}
         </h1>
         <Slider
