@@ -1,150 +1,15 @@
 import 'twin.macro'
 import Head from 'next/head'
 import { FaPlus, FaMinus } from 'react-icons/fa'
-import { Machine, assign, send } from 'xstate'
+import { Machine, assign, send, State } from 'xstate'
 import { useMachine } from '@xstate/react'
-
-// The hierarchical (recursive) schema for the states
-interface StaminaStateSchema {
-  states: {
-    incomplete: {}
-    valid: {}
-    invalid: {}
-  }
-}
-
-// The events that the machine handles
-type StaminaEvent =
-  | {
-      type: 'UPDATE_CARDS'
-      cardType: keyof StaminaContext['cards']
-      value: number
-    }
-  | {
-      type: 'UPDATE_TOTAL_CARDS'
-      value: number
-    }
-  | { type: 'CHECK_CARDS' }
-  | { type: 'INCOMPLETE' }
-  | { type: 'INVALID' }
-  | { type: 'VALID' }
-
-// The context (extended state) of the machine
-interface StaminaContext {
-  rounds: number
-  totalCards: number
-  cards: {
-    hand: number
-    discarded: number
-    lost: number
-    active: number
-  }
-}
-
-function getRecordedCards(cards: StaminaContext['cards']) {
-  return Object.values(cards).reduce((total, n) => total + n, 0)
-}
-
-function getRemainingRounds(
-  cards: Pick<StaminaContext['cards'], 'hand' | 'discarded'>
-) {
-  let remainingRounds = 0
-  let { hand, discarded } = cards
-  // keep iterating while you have at least 2 cards in hand
-  // TODO: account for active cards
-  while (hand >= 2) {
-    hand -= 2
-    discarded += 2
-    remainingRounds++
-    // if you don't have enough to play another round, short rest
-    // which means all but one card goes from your discarded to your
-    // hand and you repeat the process
-    if (hand <= 1 && discarded >= 2) {
-      hand += discarded - 1
-      discarded = 0
-    }
-  }
-
-  return remainingRounds
-}
-
-const staminaMachine = Machine<
-  StaminaContext,
-  StaminaStateSchema,
-  StaminaEvent
->(
-  {
-    initial: 'incomplete',
-    context: {
-      rounds: 0,
-      totalCards: 12,
-      cards: {
-        hand: 0,
-        discarded: 0,
-        lost: 0,
-        active: 0,
-      },
-    },
-    states: {
-      incomplete: {},
-      invalid: {},
-      valid: {},
-    },
-    on: {
-      UPDATE_TOTAL_CARDS: {
-        actions: ['updateTotalCards', send('CHECK_CARDS')],
-      },
-      UPDATE_CARDS: {
-        actions: ['updateCards', send('CHECK_CARDS')],
-      },
-      CHECK_CARDS: {
-        actions: ['checkCards'],
-      },
-      INCOMPLETE: 'incomplete',
-      INVALID: 'invalid',
-      VALID: 'valid',
-    },
-  },
-  {
-    actions: {
-      updateTotalCards: assign({
-        totalCards: (context, event) => {
-          if (event.type !== 'UPDATE_TOTAL_CARDS') {
-            throw new Error(`Invalid event type ${event.type}`)
-          }
-          return Math.max(event.value, 0)
-        },
-      }),
-      updateCards: assign((context, event) => {
-        if (event.type !== 'UPDATE_CARDS') {
-          throw new Error(`Invalid event type ${event.type}`)
-        }
-
-        const cardsCopy = { ...context.cards }
-        cardsCopy[event.cardType] = event.value
-        return { ...context, cards: cardsCopy }
-      }),
-      checkCards: send((context) => {
-        const { totalCards, cards } = context
-        const totalRecordedCards = getRecordedCards(cards)
-        if (totalRecordedCards < totalCards) {
-          return { type: 'INCOMPLETE' }
-        } else if (totalRecordedCards > totalCards) {
-          return { type: 'INVALID' }
-        } else {
-          return { type: 'VALID' }
-        }
-      }),
-    },
-  }
-)
 
 export default function Home() {
   const [state, send] = useMachine(staminaMachine)
-  const { totalCards, cards } = state.context
-  const { hand, discarded, lost, active } = cards
+  const { totalCards, cardPlacements } = state.context
+  const { hand, discarded, lost, active } = cardPlacements
 
-  const cardDifference = totalCards - getRecordedCards(cards)
+  const maxCards = totalCards ?? 10 // default to 10 cards when no cards have been given
 
   return (
     <>
@@ -154,15 +19,7 @@ export default function Home() {
 
       <article tw="mx-auto sm:w-4/5 md:w-96">
         <h1 tw="font-display text-2xl text-gray-900 mt-8">
-          {state.matches('incomplete')
-            ? `${cardDifference} card${cardDifference > 1 ? 's' : ''} remaining`
-            : state.matches('invalid')
-            ? `${Math.abs(cardDifference)} extra card${
-                cardDifference < -1 ? 's' : ''
-              }`
-            : state.matches('valid')
-            ? `You have ${getRemainingRounds(cards)} rounds left`
-            : null}
+          <TitleText state={state} />
         </h1>
 
         <div tw="space-y-4 my-4 mt-8">
@@ -172,14 +29,15 @@ export default function Home() {
             </label>
             <input
               id="totalCards"
-              tw="rounded-sm border-b border-gray-400 text-right w-14"
-              value={totalCards}
-              onChange={(e) =>
+              tw="rounded-sm border-b border-gray-400  w-14"
+              value={totalCards ?? ''} // '' is the null case for inputs
+              onChange={(e) => {
+                const newTotalCards = e.currentTarget.value
                 send({
                   type: 'UPDATE_TOTAL_CARDS',
-                  value: Number(e.currentTarget.value),
+                  value: newTotalCards === '' ? null : Number(newTotalCards),
                 })
-              }
+              }}
               type="number"
               min="0"
             />
@@ -192,7 +50,7 @@ export default function Home() {
               send({ type: 'UPDATE_CARDS', cardType: 'hand', value })
             }
             label={`Cards in hand: ${hand}`}
-            max={totalCards}
+            max={maxCards}
           />
           <Slider
             id="lost"
@@ -201,7 +59,7 @@ export default function Home() {
               send({ type: 'UPDATE_CARDS', cardType: 'lost', value })
             }
             label={`Lost cards: ${lost}`}
-            max={totalCards}
+            max={maxCards}
           />
           <Slider
             id="discarded"
@@ -210,7 +68,7 @@ export default function Home() {
               send({ type: 'UPDATE_CARDS', cardType: 'discarded', value })
             }
             label={`Discarded cards: ${discarded}`}
-            max={totalCards}
+            max={maxCards}
           />
           <Slider
             id="active"
@@ -219,12 +77,54 @@ export default function Home() {
               send({ type: 'UPDATE_CARDS', cardType: 'active', value })
             }
             label={`Active cards: ${active}`}
-            max={totalCards}
+            max={maxCards}
           />
         </div>
       </article>
     </>
   )
+}
+
+type TitleTextProps = {
+  state: State<
+    StaminaContext,
+    StaminaEvent,
+    any,
+    {
+      value: any
+      context: StaminaContext
+    }
+  >
+}
+function TitleText({ state }: TitleTextProps) {
+  const { totalCards, placedCards, cardPlacements } = state.context
+  if (state.matches('invalid')) {
+    return <>Please fill out the total cards</>
+  } else if (state.matches('missingCards')) {
+    if (totalCards === null) {
+      throw new Error(`Total cards cannot be null in state ${state.value}`)
+    }
+    const remainingCards = totalCards - placedCards
+    return (
+      <>
+        You have {remainingCards} {cardOrCards(remainingCards)} remaining
+      </>
+    )
+  } else if (state.matches('extraCards')) {
+    if (totalCards === null) {
+      throw new Error(`Total cards cannot be null in state ${state.value}`)
+    }
+    const extraCards = placedCards - totalCards
+    return (
+      <>
+        You've played {extraCards} {cardOrCards(extraCards)} to many
+      </>
+    )
+  } else if (state.matches('valid')) {
+    return <>You have {getRemainingRounds(cardPlacements)} rounds left</>
+  } else {
+    throw new Error(`Invalid state ${state.value}`)
+  }
 }
 
 type SliderProps = {
@@ -266,4 +166,154 @@ function Slider({ id, value, onChange, label, min = 0, max }: SliderProps) {
       </div>
     </div>
   )
+}
+
+// hooks/logic
+
+type TotalCards = number | null
+
+interface StaminaStateSchema {
+  states: {
+    missingCards: {}
+    valid: {}
+    extraCards: {}
+    invalid: {}
+  }
+}
+
+type StaminaEvent =
+  | {
+      type: 'UPDATE_CARDS'
+      cardType: keyof StaminaContext['cardPlacements']
+      value: number
+    }
+  | {
+      type: 'UPDATE_TOTAL_CARDS'
+      value: TotalCards
+    }
+  | { type: 'MISSING_CARDS' }
+  | { type: 'VALID' }
+  | { type: 'EXTRA_CARDS' }
+  | { type: 'INVALID' }
+
+interface StaminaContext {
+  rounds: number
+  placedCards: number
+  totalCards: TotalCards
+  cardPlacements: {
+    hand: number
+    discarded: number
+    lost: number
+    active: number
+  }
+}
+
+const staminaMachine = Machine<
+  StaminaContext,
+  StaminaStateSchema,
+  StaminaEvent
+>(
+  {
+    initial: 'missingCards',
+    context: {
+      rounds: 0,
+      totalCards: 12,
+      placedCards: 0,
+      cardPlacements: {
+        hand: 0,
+        discarded: 0,
+        lost: 0,
+        active: 0,
+      },
+    },
+    states: {
+      missingCards: {},
+      valid: {},
+      extraCards: {},
+      invalid: {},
+    },
+    on: {
+      UPDATE_TOTAL_CARDS: {
+        actions: ['updateTotalCards', 'checkCards'],
+      },
+      UPDATE_CARDS: {
+        actions: ['updateCards', 'checkCards'],
+      },
+      MISSING_CARDS: 'missingCards',
+      VALID: 'valid',
+      EXTRA_CARDS: 'extraCards',
+      INVALID: 'invalid',
+    },
+  },
+  {
+    actions: {
+      updateTotalCards: assign({
+        totalCards: (context, event) => {
+          if (event.type !== 'UPDATE_TOTAL_CARDS') {
+            throw new Error(`Invalid event type ${event.type}`)
+          }
+          return event.value
+        },
+      }),
+      updateCards: assign((context, event) => {
+        if (event.type !== 'UPDATE_CARDS') {
+          throw new Error(`Invalid event type ${event.type}`)
+        }
+
+        const cardPlacementsCopy = { ...context.cardPlacements }
+        cardPlacementsCopy[event.cardType] = event.value
+        const placedCards = getPlacedCards(cardPlacementsCopy)
+        return { ...context, placedCards, cardPlacements: cardPlacementsCopy }
+      }),
+      checkCards: send((context) => {
+        const { totalCards, placedCards } = context
+
+        if (totalCards === null) {
+          return { type: 'INVALID' }
+        } else if (placedCards < totalCards) {
+          return { type: 'MISSING_CARDS' }
+        } else if (placedCards > totalCards) {
+          return { type: 'EXTRA_CARDS' }
+        } else {
+          return { type: 'VALID' }
+        }
+      }),
+    },
+  }
+)
+
+function getPlacedCards(cards: StaminaContext['cardPlacements']) {
+  return Object.values(cards).reduce((total, n) => total + n, 0)
+}
+
+function getRemainingRounds(
+  cards: Pick<StaminaContext['cardPlacements'], 'hand' | 'discarded'>
+) {
+  let remainingRounds = 0
+  let { hand, discarded } = cards
+  // keep iterating while you have at least 2 cards in hand
+  // TODO: account for active cards
+  while (hand >= 2) {
+    hand -= 2
+    discarded += 2
+    remainingRounds++
+    // if you don't have enough to play another round, short rest
+    // which means all but one card goes from your discarded to your
+    // hand and you repeat the process
+    if (hand <= 1 && discarded >= 2) {
+      hand += discarded - 1
+      discarded = 0
+    }
+  }
+
+  return remainingRounds
+}
+
+/**
+ *
+ * @param n
+ * @returns the word 'card' or 'cards' depending on if n > 1
+ */
+function cardOrCards(n: number) {
+  return `card${n > 1 ? 's' : ''}`
 }
