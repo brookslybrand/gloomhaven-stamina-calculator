@@ -18,12 +18,12 @@ export default function Home() {
         <title>Gloomhaven Stamina Calculator</title>
       </Head>
 
-      <article tw="mx-auto sm:w-11/12 md:w-96 bg-gray-700 bg-opacity-80 px-8 pt-8 pb-16 rounded-lg top-8">
-        <h1 tw="font-display text-2xl font-semibold tracking-wide text-gray-200 text-center">
+      <article tw="mx-auto sm:w-11/12 md:w-96 bg-gray-700 bg-opacity-80 pt-8 pb-16 rounded-lg top-8">
+        <h1 tw="font-display text-3xl font-extralight tracking-wide text-gray-200 text-center">
           <TitleText state={state} />
         </h1>
 
-        <section tw="pt-8 space-y-8">
+        <section tw="pt-8 space-y-8 px-8">
           <div tw="flex w-full space-x-4">
             <label tw="font-display text-xl text-gray-200" htmlFor="totalCards">
               Total cards:
