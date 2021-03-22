@@ -1,3 +1,4 @@
+import Background from '@/components/background'
 import type { AppProps } from 'next/app'
 import { GlobalStyles } from 'twin.macro'
 import '../styles/globals.css'
@@ -12,6 +13,7 @@ function App({ Component, pageProps }: AppProps & ComponentWithPageLayout) {
   return (
     <>
       <GlobalStyles />
+      <Background />
       {
         // get a page root if one was set
         Component.PageLayout ? (

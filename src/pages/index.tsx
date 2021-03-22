@@ -1,7 +1,8 @@
 import 'twin.macro'
 import Head from 'next/head'
 import { FaPlus, FaMinus } from 'react-icons/fa'
-import { Machine, assign, send, State } from 'xstate'
+import { Machine, assign, send } from 'xstate'
+import type { State } from 'xstate'
 import { useMachine } from '@xstate/react'
 
 export default function Home() {
@@ -17,19 +18,19 @@ export default function Home() {
         <title>Gloomhaven Stamina Calculator</title>
       </Head>
 
-      <article tw="mx-auto sm:w-4/5 md:w-96">
-        <h1 tw="font-display text-2xl text-gray-900 mt-8">
+      <article tw="mx-auto sm:w-11/12 md:w-96 bg-gray-700 bg-opacity-80 px-8 pt-8 pb-16 rounded-lg top-8">
+        <h1 tw="font-display text-2xl font-semibold tracking-wide text-gray-200 text-center">
           <TitleText state={state} />
         </h1>
 
-        <div tw="space-y-4 my-4 mt-8">
+        <section tw="pt-8 space-y-8">
           <div tw="flex w-full space-x-4">
-            <label tw="font-display text-lg font-semibold" htmlFor="totalCards">
+            <label tw="font-display text-xl text-gray-200" htmlFor="totalCards">
               Total cards:
             </label>
             <input
               id="totalCards"
-              tw="rounded-sm border-b border-gray-400  w-14"
+              tw="rounded-sm border-b border-gray-400 w-14"
               value={totalCards ?? ''} // '' is the null case for inputs
               onChange={(e) => {
                 const newTotalCards = e.currentTarget.value
@@ -79,7 +80,7 @@ export default function Home() {
             label={`Active cards: ${active}`}
             max={maxCards}
           />
-        </div>
+        </section>
       </article>
     </>
   )
@@ -107,7 +108,7 @@ function TitleText({ state }: TitleTextProps) {
     const remainingCards = totalCards - placedCards
     return (
       <>
-        You have {remainingCards} {cardOrCards(remainingCards)} remaining
+        {remainingCards} {cardOrCards(remainingCards)} remaining
       </>
     )
   } else if (state.matches('extraCards')) {
@@ -117,11 +118,11 @@ function TitleText({ state }: TitleTextProps) {
     const extraCards = placedCards - totalCards
     return (
       <>
-        You've played {extraCards} {cardOrCards(extraCards)} to many
+        {extraCards} extra {cardOrCards(extraCards)}
       </>
     )
   } else if (state.matches('valid')) {
-    return <>You have {getRemainingRounds(cardPlacements)} rounds left</>
+    return <>{getRemainingRounds(cardPlacements)} rounds left</>
   } else {
     throw new Error(`Invalid state ${state.value}`)
   }
@@ -138,7 +139,7 @@ type SliderProps = {
 function Slider({ id, value, onChange, label, min = 0, max }: SliderProps) {
   return (
     <div tw="flex flex-col">
-      <label tw="font-display text-lg" htmlFor={id}>
+      <label tw="font-display text-lg text-gray-200" htmlFor={id}>
         {label}
       </label>
       <div tw="flex w-full space-x-2">
@@ -146,7 +147,7 @@ function Slider({ id, value, onChange, label, min = 0, max }: SliderProps) {
           aria-label="subtract 1"
           onClick={() => onChange(Math.max(0, value - 1))}
         >
-          <FaMinus />
+          <FaMinus tw="fill-gray-200" />
         </button>
         <input
           tw="w-full"
@@ -161,7 +162,7 @@ function Slider({ id, value, onChange, label, min = 0, max }: SliderProps) {
           aria-label="add 1"
           onClick={() => onChange(Math.min(max, value + 1))}
         >
-          <FaPlus />
+          <FaPlus tw="fill-gray-200" />
         </button>
       </div>
     </div>

@@ -1,6 +1,14 @@
 /* @font-face and Poppin's woff2 files generated from https://google-webfonts-helper.herokuapp.com/fonts */
 /* Poppins is not a variable font */
 
+html,body {
+  height: 100%;
+}
+
+* {
+  position: relative;
+}
+
 /* poppins-100 - latin */
 @font-face {
   font-family: 'Poppins';
