@@ -1,4 +1,4 @@
-import 'twin.macro'
+import tw from 'twin.macro'
 import Head from 'next/head'
 import { FaPlus, FaMinus } from 'react-icons/fa'
 import { Machine, assign, send } from 'xstate'
@@ -18,9 +18,16 @@ export default function Home() {
         <title>Gloomhaven Stamina Calculator</title>
       </Head>
 
-      <article tw="mx-auto sm:w-11/12 md:w-96 bg-gray-700 bg-opacity-80 pt-8 pb-16 rounded-lg top-8">
-        <h1 tw="font-display text-3xl font-extralight tracking-wide text-gray-200 text-center">
-          <TitleText state={state} />
+      <article tw="mx-auto sm:(w-11/12 top-16) md:(w-96 top-24) bg-gray-700 bg-opacity-80 pt-8 pb-12 rounded-lg">
+        <h1
+          css={[
+            tw`text-3xl font-light tracking-wide text-center font-display`,
+            state.matches('valid') ? tw`text-gray-200` : tw`text-red-300`,
+          ]}
+        >
+          {`${
+            state.matches('valid') ? getRemainingRounds(cardPlacements) : '–'
+          } rounds left`}
         </h1>
 
         <section tw="pt-8 space-y-8 px-8">
@@ -80,6 +87,8 @@ export default function Home() {
             label={`Active cards: ${active}`}
             max={maxCards}
           />
+
+          <ExplanationText state={state} />
         </section>
       </article>
     </>
@@ -97,36 +106,49 @@ type TitleTextProps = {
     }
   >
 }
-function TitleText({ state }: TitleTextProps) {
-  const { totalCards, placedCards, cardPlacements } = state.context
+function ExplanationText({ state }: TitleTextProps) {
+  return (
+    <p
+      css={[explanationTextCss, state.matches('valid') ? tw`invisible` : null]}
+    >
+      {state.matches('valid')
+        ? // this text is not meant to be rendered, but is just taking up space
+          // for the invisible element so the content doesn't shift
+          'placeholder'
+        : getExplanationText(state)}
+    </p>
+  )
+}
+
+function getExplanationText(state: TitleTextProps['state']) {
+  const { totalCards, placedCards } = state.context
+
   if (state.matches('invalid')) {
-    return <>Please fill out the total cards</>
+    return 'Please fill out the total cards'
   } else if (state.matches('missingCards')) {
     if (totalCards === null) {
       throw new Error(`Total cards cannot be null in state ${state.value}`)
     }
     const remainingCards = totalCards - placedCards
-    return (
-      <>
-        {remainingCards} {cardOrCards(remainingCards)} remaining
-      </>
-    )
+    return `
+        ${remainingCards} ${cardOrCards(remainingCards)} remaining
+      `
   } else if (state.matches('extraCards')) {
     if (totalCards === null) {
       throw new Error(`Total cards cannot be null in state ${state.value}`)
     }
     const extraCards = placedCards - totalCards
-    return (
-      <>
-        {extraCards} extra {cardOrCards(extraCards)}
-      </>
-    )
+    return `
+        ${extraCards} extra ${cardOrCards(extraCards)}
+      `
   } else if (state.matches('valid')) {
-    return <>{getRemainingRounds(cardPlacements)} rounds left</>
+    return ''
   } else {
     throw new Error(`Invalid state ${state.value}`)
   }
 }
+
+const explanationTextCss = tw`text-2xl tracking-wide text-red-300 font-display`
 
 type SliderProps = {
   id: string
