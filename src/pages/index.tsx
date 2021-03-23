@@ -41,7 +41,7 @@ export default function Home() {
             </label>
             <input
               id="totalCards"
-              tw="rounded-sm border-b border-gray-400 w-14"
+              tw="rounded-sm border-b border-gray-400 w-14 px-2 flex-grow bg-gray-200 text-gray-800 text-xl font-medium leading-none"
               value={totalCards ?? ''} // '' is the null case for inputs
               onChange={(e) => {
                 const newTotalCards = e.currentTarget.value
