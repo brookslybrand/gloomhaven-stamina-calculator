@@ -1,9 +1,18 @@
-import tw from 'twin.macro'
+import tw, { css } from 'twin.macro'
 import Head from 'next/head'
+import {
+  SliderInput,
+  SliderTrack,
+  SliderRange,
+  SliderHandle,
+  SliderMarker,
+} from '@reach/slider'
 import { FaPlus, FaMinus } from 'react-icons/fa'
 import { Machine, assign, send } from 'xstate'
 import type { State } from 'xstate'
 import { useMachine } from '@xstate/react'
+
+import '@reach/slider/styles.css'
 
 export default function Home() {
   const [state, send] = useMachine(staminaMachine)
@@ -18,13 +27,8 @@ export default function Home() {
         <title>Gloomhaven Stamina Calculator</title>
       </Head>
 
-      <article tw="mx-auto sm:(w-11/12 top-16) md:(w-96 top-24) bg-gray-700 bg-opacity-80 pt-8 pb-12 rounded-lg">
-        <h1
-          css={[
-            tw`text-3xl font-light tracking-wide text-center font-display`,
-            state.matches('valid') ? tw`text-gray-200` : tw`text-red-300`,
-          ]}
-        >
+      <article tw="mx-auto sm:(w-11/12 top-8) md:(w-96 top-24) bg-gray-700 bg-opacity-80 pt-8 pb-12 rounded-lg">
+        <h1 tw="text-3xl font-light tracking-wide text-center text-gray-200 font-display">
           {`${
             state.matches('valid') ? getRemainingRounds(cardPlacements) : '–'
           } rounds left`}
@@ -51,8 +55,7 @@ export default function Home() {
             />
           </div>
 
-          <Slider
-            id="hand"
+          <CustomSlider
             value={hand}
             onChange={(value) =>
               send({ type: 'UPDATE_CARDS', cardType: 'hand', value })
@@ -60,8 +63,7 @@ export default function Home() {
             label={`Cards in hand: ${hand}`}
             max={maxCards}
           />
-          <Slider
-            id="lost"
+          <CustomSlider
             value={lost}
             onChange={(value) =>
               send({ type: 'UPDATE_CARDS', cardType: 'lost', value })
@@ -69,8 +71,7 @@ export default function Home() {
             label={`Lost cards: ${lost}`}
             max={maxCards}
           />
-          <Slider
-            id="discarded"
+          <CustomSlider
             value={discarded}
             onChange={(value) =>
               send({ type: 'UPDATE_CARDS', cardType: 'discarded', value })
@@ -78,8 +79,7 @@ export default function Home() {
             label={`Discarded cards: ${discarded}`}
             max={maxCards}
           />
-          <Slider
-            id="active"
+          <CustomSlider
             value={active}
             onChange={(value) =>
               send({ type: 'UPDATE_CARDS', cardType: 'active', value })
@@ -109,7 +109,10 @@ type TitleTextProps = {
 function ExplanationText({ state }: TitleTextProps) {
   return (
     <p
-      css={[explanationTextCss, state.matches('valid') ? tw`invisible` : null]}
+      css={[
+        tw`text-2xl tracking-wide text-red-400 font-display`,
+        state.matches('valid') ? tw`invisible` : null,
+      ]}
     >
       {state.matches('valid')
         ? // this text is not meant to be rendered, but is just taking up space
@@ -148,39 +151,49 @@ function getExplanationText(state: TitleTextProps['state']) {
   }
 }
 
-const explanationTextCss = tw`text-2xl tracking-wide text-red-300 font-display`
-
-type SliderProps = {
-  id: string
+type CustomSliderProps = {
   value: number
   onChange: (n: number) => void
   label: string
+  step?: number
   min?: number
   max: number
 }
-function Slider({ id, value, onChange, label, min = 0, max }: SliderProps) {
+function CustomSlider({
+  value,
+  onChange,
+  label,
+  step = 1,
+  min = 0,
+  max,
+}: CustomSliderProps) {
   return (
     <div tw="flex flex-col">
-      <label tw="font-display text-lg text-gray-200" htmlFor={id}>
-        {label}
-      </label>
-      <div tw="flex w-full space-x-2">
+      <label tw="font-display text-lg text-gray-200">{label}</label>
+      <div tw="flex w-full space-x-4 items-center">
         <button
+          css={[tw`rounded-full`, focusRingCss]}
           aria-label="subtract 1"
           onClick={() => onChange(Math.max(0, value - 1))}
         >
           <FaMinus tw="fill-gray-200" />
         </button>
-        <input
+
+        <SliderInput
           tw="w-full"
           value={value}
-          onChange={(e) => onChange(Number(e.currentTarget.value))}
-          type="range"
-          id={id}
+          onChange={(newValue) => onChange(newValue)}
+          step={step}
           min={min}
           max={max}
-        />
+        >
+          <SliderTrack tw="bg-gray-200">
+            <SliderRange tw="bg-green-700 bg-opacity-70" />
+            <SliderHandle css={[tw`bg-green-700`, focusRingCss]} />
+          </SliderTrack>
+        </SliderInput>
         <button
+          css={[tw`rounded-full`, focusRingCss]}
           aria-label="add 1"
           onClick={() => onChange(Math.min(max, value + 1))}
         >
@@ -190,6 +203,8 @@ function Slider({ id, value, onChange, label, min = 0, max }: SliderProps) {
     </div>
   )
 }
+
+const focusRingCss = tw`focus:(outline-none ring-2 ring-offset-1 ring-offset-gray-200 ring-green-700)`
 
 // hooks/logic
 
