@@ -172,7 +172,7 @@ function CustomSlider({
       <label tw="font-display text-lg text-gray-200">{label}</label>
       <div tw="flex w-full space-x-4 items-center">
         <button
-          css={[tw`rounded-full`, focusRingCss, activeRingCss]}
+          css={iconButtonCss}
           aria-label="subtract 1"
           onClick={() => onChange(Math.max(0, value - 1))}
         >
@@ -189,11 +189,17 @@ function CustomSlider({
         >
           <SliderTrack tw="bg-gray-200">
             <SliderRange tw="bg-green-700 bg-opacity-70" />
-            <SliderHandle css={[iconCss, tw`bg-green-700`, focusRingCss]} />
+            <SliderHandle
+              css={[
+                iconCss,
+                tw`bg-green-700 hover:(bg-green-800) active:(bg-green-800)`,
+                focusRingCss,
+              ]}
+            />
           </SliderTrack>
         </SliderInput>
         <button
-          css={[tw`rounded-full`, focusRingCss, activeRingCss]}
+          css={iconButtonCss}
           aria-label="add 1"
           onClick={() => onChange(Math.min(max, value + 1))}
         >
@@ -204,10 +210,14 @@ function CustomSlider({
   )
 }
 
-const iconCss = tw`w-5 h-5 fill-gray-200`
-const focusRingCss = tw`focus:(outline-none ring-2 ring-offset-1 ring-offset-gray-200 ring-green-700)`
-const activeRingCss = tw`active:(outline-none ring-2 ring-offset-1 ring-offset-gray-200 ring-green-700)`
-
+const focusRingCss = tw`focus:(outline-none ring-2 ring-offset-2 ring-offset-gray-200 ring-green-700)`
+const activeRingCss = tw`active:(outline-none ring-2 ring-offset-2 ring-offset-gray-200 ring-green-700)`
+const iconButtonCss = [
+  tw`rounded-full text-gray-200 active:(bg-green-700)`,
+  focusRingCss,
+  activeRingCss,
+]
+const iconCss = tw`w-6 h-6 fill-current`
 // hooks/logic
 
 type TotalCards = number | null
