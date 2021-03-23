@@ -1,11 +1,10 @@
-import tw, { css } from 'twin.macro'
+import tw from 'twin.macro'
 import Head from 'next/head'
 import {
   SliderInput,
   SliderTrack,
   SliderRange,
   SliderHandle,
-  SliderMarker,
 } from '@reach/slider'
 import { FaPlus, FaMinus } from 'react-icons/fa'
 import { Machine, assign, send } from 'xstate'
@@ -28,17 +27,34 @@ export default function Home() {
       </Head>
 
       <article tw="mx-auto sm:(w-11/12 top-8) md:(w-96 top-24) bg-gray-700 bg-opacity-80 pt-8 pb-12 rounded-lg">
-        <h1 tw="text-3xl font-light tracking-wide text-center text-gray-200 font-display">
-          {`${
-            state.matches('valid') ? getRemainingRounds(cardPlacements) : '–'
-          } rounds left`}
+        <h1 tw="text-3xl font-medium tracking-wide text-center text-gray-200 font-display">
+          {state.matches('valid') ? (
+            <>{getRemainingRounds(cardPlacements)} rounds left</>
+          ) : (
+            <>
+              <span>? rounds left</span>
+              {/* <span tw="text-red-400">*</span> */}
+            </>
+          )}
+          {/* {`${
+            state.matches('valid') ? (
+              getRemainingRounds(cardPlacements)
+            ) : (
+              // <>
+              //   <span>? rounds left</span>
+              //   <span>*</span>
+              // </>
+            ) //'–'
+          } rounds left`} */}
         </h1>
+        <ExplanationText2 state={state} />
 
         <section tw="pt-8 space-y-8 px-8">
           <div tw="flex w-full space-x-4">
             <label tw="font-display text-xl text-gray-200" htmlFor="totalCards">
-              Total cards:
+              Total cards
             </label>
+
             <input
               id="totalCards"
               tw="rounded-sm border-b border-gray-400 w-14 px-2 flex-grow bg-gray-200 text-gray-800 text-xl font-medium leading-none"
@@ -90,7 +106,7 @@ export default function Home() {
             max={maxCards}
           />
 
-          <ExplanationText state={state} />
+          {/* <ExplanationText state={state} /> */}
         </section>
       </article>
     </>
@@ -107,6 +123,44 @@ type TitleTextProps = {
       context: StaminaContext
     }
   >
+}
+function ExplanationText2({ state }: TitleTextProps) {
+  const { placedCards, totalCards } = state.context
+  return (
+    <p
+      css={[
+        tw`text-lg tracking-wide text-center text-red-400 font-display`,
+        state.matches('valid') ? tw`invisible` : null,
+      ]}
+    >
+      {state.matches('extraCards') || state.matches('missingCards') ? (
+        <>
+          {placedCards}/{totalCards} cards —{' '}
+        </>
+      ) : null}
+      {state.matches('extraCards') ? (
+        <span>remove cards</span>
+      ) : state.matches('missingCards') ? (
+        <span>add cards</span>
+      ) : state.matches('invalid') ? (
+        <span>Fill out total cards</span>
+      ) : (
+        <span>asdfsdaf</span>
+      )}
+    </p>
+    // <p
+    //   css={[
+    //     tw`text-2xl tracking-wide text-red-400 font-display`,
+    //     state.matches('valid') ? tw`invisible` : null,
+    //   ]}
+    // >
+    //   {state.matches('valid')
+    //     ? // this text is not meant to be rendered, but is just taking up space
+    //       // for the invisible element so the content doesn't shift
+    //       'placeholder'
+    //     : getExplanationText(state)}
+    // </p>
+  )
 }
 function ExplanationText({ state }: TitleTextProps) {
   return (
@@ -190,11 +244,11 @@ function CustomSlider({
           max={max}
         >
           <SliderTrack tw="bg-gray-200">
-            <SliderRange tw="bg-green-700 bg-opacity-70" />
+            <SliderRange tw="bg-blue-400 bg-opacity-70" />
             <SliderHandle
               css={[
                 iconCss,
-                tw`bg-green-700 hover:(bg-green-800) active:(bg-green-800)`,
+                tw`bg-blue-500 hover:(bg-blue-600) active:(bg-blue-600)`,
                 focusRingCss,
               ]}
             />
@@ -212,10 +266,10 @@ function CustomSlider({
   )
 }
 
-const focusRingCss = tw`focus:(outline-none ring-2 ring-offset-2 ring-offset-gray-200 ring-green-700)`
-const activeRingCss = tw`active:(outline-none ring-2 ring-offset-2 ring-offset-gray-200 ring-green-700)`
+const focusRingCss = tw`focus:(outline-none ring-2 ring-offset-1 ring-offset-gray-200 ring-blue-600)`
+const activeRingCss = tw`active:(outline-none ring-2 ring-offset-1 ring-offset-gray-200 ring-blue-600)`
 const iconButtonCss = [
-  tw`rounded-full text-gray-200 active:(bg-green-700)`,
+  tw`rounded-full text-gray-200 active:(bg-blue-600)`,
   focusRingCss,
   activeRingCss,
 ]
