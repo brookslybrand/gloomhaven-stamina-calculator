@@ -52,6 +52,8 @@ export default function Home() {
               }}
               type="number"
               min="0"
+              inputMode="numeric"
+              pattern="[0-9]*"
             />
           </div>
 
