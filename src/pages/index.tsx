@@ -26,89 +26,81 @@ export default function Home() {
         <title>Gloomhaven Stamina Calculator</title>
       </Head>
 
-      <article tw="mx-auto sm:(w-11/12 top-8) md:(w-96 top-24) bg-gray-700 bg-opacity-80 pt-8 pb-12 rounded-lg">
-        <h1 tw="text-3xl font-medium tracking-wide text-center text-gray-200 font-display">
-          {state.matches('valid') ? (
-            <>{getRemainingRounds(cardPlacements)} rounds left</>
-          ) : (
-            <>
-              <span>? rounds left</span>
-              {/* <span tw="text-red-400">*</span> */}
-            </>
-          )}
-          {/* {`${
-            state.matches('valid') ? (
-              getRemainingRounds(cardPlacements)
+      <div tw="mx-auto sm:(w-11/12 py-8) md:(w-96 py-24)">
+        <article tw="w-full bg-gray-700 bg-opacity-80 pt-8 pb-12 rounded-lg">
+          <h1 tw="text-3xl font-medium tracking-wide text-center text-gray-200 font-display">
+            {state.matches('valid') ? (
+              <>{getRemainingRounds(cardPlacements)} rounds left</>
             ) : (
-              // <>
-              //   <span>? rounds left</span>
-              //   <span>*</span>
-              // </>
-            ) //'–'
-          } rounds left`} */}
-        </h1>
-        <ExplanationText2 state={state} />
+              <>
+                <span>? rounds left</span>
+              </>
+            )}
+          </h1>
+          <ExplanationText state={state} />
 
-        <section tw="pt-8 space-y-8 px-8">
-          <div tw="flex w-full space-x-4">
-            <label tw="font-display text-xl text-gray-200" htmlFor="totalCards">
-              Total cards
-            </label>
+          <section tw="pt-8 space-y-8 px-8">
+            <div tw="flex w-full space-x-4">
+              <label
+                tw="font-display text-xl text-gray-200"
+                htmlFor="totalCards"
+              >
+                Total cards
+              </label>
 
-            <input
-              id="totalCards"
-              tw="rounded-sm border-b border-gray-400 w-14 px-2 flex-grow bg-gray-200 text-gray-800 text-xl font-medium leading-none"
-              value={totalCards ?? ''} // '' is the null case for inputs
-              onChange={(e) => {
-                const newTotalCards = e.currentTarget.value
-                send({
-                  type: 'UPDATE_TOTAL_CARDS',
-                  value: newTotalCards === '' ? null : Number(newTotalCards),
-                })
-              }}
-              type="number"
-              min="0"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              <input
+                id="totalCards"
+                tw="rounded-sm border-b border-gray-400 w-14 px-2 flex-grow bg-gray-200 text-gray-800 text-xl font-medium leading-none"
+                value={totalCards ?? ''} // '' is the null case for inputs
+                onChange={(e) => {
+                  const newTotalCards = e.currentTarget.value
+                  send({
+                    type: 'UPDATE_TOTAL_CARDS',
+                    value: newTotalCards === '' ? null : Number(newTotalCards),
+                  })
+                }}
+                type="number"
+                min="0"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              />
+            </div>
+
+            <CustomSlider
+              value={hand}
+              onChange={(value) =>
+                send({ type: 'UPDATE_CARDS', cardType: 'hand', value })
+              }
+              label={`Cards in hand: ${hand}`}
+              max={maxCards}
             />
-          </div>
-
-          <CustomSlider
-            value={hand}
-            onChange={(value) =>
-              send({ type: 'UPDATE_CARDS', cardType: 'hand', value })
-            }
-            label={`Cards in hand: ${hand}`}
-            max={maxCards}
-          />
-          <CustomSlider
-            value={lost}
-            onChange={(value) =>
-              send({ type: 'UPDATE_CARDS', cardType: 'lost', value })
-            }
-            label={`Lost cards: ${lost}`}
-            max={maxCards}
-          />
-          <CustomSlider
-            value={discarded}
-            onChange={(value) =>
-              send({ type: 'UPDATE_CARDS', cardType: 'discarded', value })
-            }
-            label={`Discarded cards: ${discarded}`}
-            max={maxCards}
-          />
-          <CustomSlider
-            value={active}
-            onChange={(value) =>
-              send({ type: 'UPDATE_CARDS', cardType: 'active', value })
-            }
-            label={`Active cards: ${active}`}
-            max={maxCards}
-          />
-
-          {/* <ExplanationText state={state} /> */}
-        </section>
-      </article>
+            <CustomSlider
+              value={lost}
+              onChange={(value) =>
+                send({ type: 'UPDATE_CARDS', cardType: 'lost', value })
+              }
+              label={`Lost cards: ${lost}`}
+              max={maxCards}
+            />
+            <CustomSlider
+              value={discarded}
+              onChange={(value) =>
+                send({ type: 'UPDATE_CARDS', cardType: 'discarded', value })
+              }
+              label={`Discarded cards: ${discarded}`}
+              max={maxCards}
+            />
+            <CustomSlider
+              value={active}
+              onChange={(value) =>
+                send({ type: 'UPDATE_CARDS', cardType: 'active', value })
+              }
+              label={`Active cards: ${active}`}
+              max={maxCards}
+            />
+          </section>
+        </article>
+      </div>
     </>
   )
 }
@@ -124,7 +116,7 @@ type TitleTextProps = {
     }
   >
 }
-function ExplanationText2({ state }: TitleTextProps) {
+function ExplanationText({ state }: TitleTextProps) {
   const { placedCards, totalCards } = state.context
   return (
     <p
@@ -145,66 +137,12 @@ function ExplanationText2({ state }: TitleTextProps) {
       ) : state.matches('invalid') ? (
         <span>Fill out total cards</span>
       ) : (
-        <span>asdfsdaf</span>
+        // this text is not meant to be rendered, but is just taking up space
+        // for the invisible element so the content doesn't shift
+        <span>placeholder</span>
       )}
     </p>
-    // <p
-    //   css={[
-    //     tw`text-2xl tracking-wide text-red-400 font-display`,
-    //     state.matches('valid') ? tw`invisible` : null,
-    //   ]}
-    // >
-    //   {state.matches('valid')
-    //     ? // this text is not meant to be rendered, but is just taking up space
-    //       // for the invisible element so the content doesn't shift
-    //       'placeholder'
-    //     : getExplanationText(state)}
-    // </p>
   )
-}
-function ExplanationText({ state }: TitleTextProps) {
-  return (
-    <p
-      css={[
-        tw`text-2xl tracking-wide text-red-400 font-display`,
-        state.matches('valid') ? tw`invisible` : null,
-      ]}
-    >
-      {state.matches('valid')
-        ? // this text is not meant to be rendered, but is just taking up space
-          // for the invisible element so the content doesn't shift
-          'placeholder'
-        : getExplanationText(state)}
-    </p>
-  )
-}
-
-function getExplanationText(state: TitleTextProps['state']) {
-  const { totalCards, placedCards } = state.context
-
-  if (state.matches('invalid')) {
-    return 'Please fill out the total cards'
-  } else if (state.matches('missingCards')) {
-    if (totalCards === null) {
-      throw new Error(`Total cards cannot be null in state ${state.value}`)
-    }
-    const remainingCards = totalCards - placedCards
-    return `
-        ${remainingCards} ${cardOrCards(remainingCards)} remaining
-      `
-  } else if (state.matches('extraCards')) {
-    if (totalCards === null) {
-      throw new Error(`Total cards cannot be null in state ${state.value}`)
-    }
-    const extraCards = placedCards - totalCards
-    return `
-        ${extraCards} extra ${cardOrCards(extraCards)}
-      `
-  } else if (state.matches('valid')) {
-    return ''
-  } else {
-    throw new Error(`Invalid state ${state.value}`)
-  }
 }
 
 type CustomSliderProps = {
@@ -248,7 +186,7 @@ function CustomSlider({
             <SliderHandle
               css={[
                 iconCss,
-                tw`bg-blue-500 hover:(bg-blue-600) active:(bg-blue-600)`,
+                tw`rounded-full bg-blue-500 hover:(bg-blue-600) active:(bg-blue-600)`,
                 focusRingCss,
               ]}
             />
